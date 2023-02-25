@@ -16,10 +16,13 @@ use std::{
 
 fn main() {
     //
-    // Ref counting is a way to share ownership.  The value of sharing ownership in a multithreaded
-    // context is that multiple threads can share the same value (avoiding new memory allocations
-    // for each thread). However, it turns out that counting references to the value is not
-    // thread-safe.  So we use `Arc` instead of `Rc`.
+    // Thus far, our ability to share information between threads has had to navigate the borrowing
+    // rules... all so we know who calls drop AND to ensure that the lifetime of what we borrow
+    // lives as long as the thread.
+    // 1. Static value created before main
+    // 2. Arc created in main
+    // 3. Value that leaks memory (never calls drop)
+    // 4. Scoped threads
     //
     let a = Arc::new([1, 2, 3]);
     let b = a.clone();
