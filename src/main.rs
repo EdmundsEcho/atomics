@@ -15,25 +15,20 @@ use std::{
 };
 
 fn main() {
-    let numbers = Vec::from_iter(0..=1000);
-
     //
-    // Return a value from the thread...
-    // Note: spawn is sugar for:
-    // `thread::Builder::new().spawn().unwrap()`
+    // Scoped threads
     //
-    let builder = thread::Builder::new().name("Average".into());
-    let result = builder
-        .spawn(move || {
-            let len = numbers.len();
-            let sum = numbers.iter().sum::<usize>();
-            panic!("Something went wrong");
-            sum / len
-        })
-        .unwrap()
-        .join()
-        .unwrap();
+    let numbers = vec![1, 2, 3];
+    thread::scope(|s| {
+        s.spawn(|| {
+            println!("Length: {}", numbers.len());
+        });
+        s.spawn(|| {
+            for n in &numbers {
+                println!("number: {n}");
+            }
+        });
+    });
 
     println!("Hello from main thread");
-    println!("Result: {result}");
 }
