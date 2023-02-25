@@ -22,13 +22,17 @@ fn main() {
     // Note: spawn is sugar for:
     // `thread::Builder::new().spawn().unwrap()`
     //
-    let result = thread::spawn(move || {
-        let len = numbers.len();
-        let sum = numbers.iter().sum::<usize>();
-        sum / len
-    })
-    .join()
-    .unwrap();
+    let builder = thread::Builder::new().name("Average".into());
+    let result = builder
+        .spawn(move || {
+            let len = numbers.len();
+            let sum = numbers.iter().sum::<usize>();
+            panic!("Something went wrong");
+            sum / len
+        })
+        .unwrap()
+        .join()
+        .unwrap();
 
     println!("Hello from main thread");
     println!("Result: {result}");
