@@ -15,16 +15,21 @@ use std::{
 };
 
 fn main() {
-    let numbers = vec![1, 2, 3];
+    let numbers = Vec::from_iter(0..=1000);
 
-    // join a single thread to main that counts to 3
-    thread::spawn(move || {
-        for n in &numbers {
-            println!("{n}");
-        }
+    //
+    // Return a value from the thread...
+    // Note: spawn is sugar for:
+    // `thread::Builder::new().spawn().unwrap()`
+    //
+    let result = thread::spawn(move || {
+        let len = numbers.len();
+        let sum = numbers.iter().sum::<usize>();
+        sum / len
     })
     .join()
     .unwrap();
 
     println!("Hello from main thread");
+    println!("Result: {result}");
 }
