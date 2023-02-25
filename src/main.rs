@@ -15,25 +15,17 @@ use std::{
 };
 
 fn main() {
-    let numbers = Vec::from_iter(0..=1000);
+    //
+    // Prevent any one thread from owning a value using Static
+    // This value exists even before main is called.
+    //
+    static X: [i32; 3] = [1, 2, 3];
 
-    //
-    // Return a value from the thread...
-    // Note: spawn is sugar for:
-    // `thread::Builder::new().spawn().unwrap()`
-    //
-    let builder = thread::Builder::new().name("Average".into());
-    let result = builder
-        .spawn(move || {
-            let len = numbers.len();
-            let sum = numbers.iter().sum::<usize>();
-            panic!("Something went wrong");
-            sum / len
-        })
-        .unwrap()
-        .join()
-        .unwrap();
+    let t1 = thread::spawn(|| dbg!(&X));
+    let t2 = thread::spawn(|| dbg!(&X));
+
+    t1.join().unwrap();
+    t2.join().unwrap();
 
     println!("Hello from main thread");
-    println!("Result: {result}");
 }
