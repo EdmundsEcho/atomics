@@ -15,10 +15,15 @@ use std::{
 };
 
 fn main() {
-    thread::spawn(f);
-    thread::spawn(f);
+    let t1 = thread::spawn(f);
+    let t2 = thread::spawn(f);
 
     println!("Hello from main thread");
+
+    // introduces a forced sequence with main
+    // t1, then main where main, then does t2
+    t1.join().unwrap();
+    t2.join().unwrap();
 }
 
 fn f() {
