@@ -16,28 +16,16 @@ use std::{
 
 fn main() {
     //
-    // Prevent any one thread from owning a value using Static
-    // This value exists even before main is called.
+    // Ref counting is a way to share ownership.  The value of sharing ownership in a multithreaded
+    // context is that multiple threads can share the same value (avoiding new memory allocations
+    // for each thread). However, it turns out that counting references to the value is not
+    // thread-safe.  So we use `Arc` instead of `Rc`.
     //
-    // 🔑 Normally we cannot borrow values because a thread can live as long as "forever" (from
-    // main's perpsective).  Static ensure what is being borrowed will in fact live forever.
-    //
-    // Note: borrowing is the only way to share a resource.
-    //
-    static X: [i32; 3] = [1, 2, 3];
+    let a = Arc::new([1, 2, 3]);
+    let b = a.clone();
 
-    let t1 = thread::spawn(|| dbg!(&X));
-    let t2 = thread::spawn(|| dbg!(&X));
-
-    t1.join().unwrap();
-    t2.join().unwrap();
-
-    //
-    // Another way to accomplish the same, memory leaking.
-    //
-    let x: &'static [i32; 3] = Box::leak(Box::new([1, 2, 3]));
-    let t1 = thread::spawn(move || dbg!(x)); // copy a borrow
-    let t2 = thread::spawn(move || dbg!(x)); // copy a borrow
+    let t1 = thread::spawn(move || dbg!(a));
+    let t2 = thread::spawn(move || dbg!(b));
 
     t1.join().unwrap();
     t2.join().unwrap();
