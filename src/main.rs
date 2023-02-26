@@ -49,6 +49,7 @@ fn main() {
                 for _ in 0..100 {
                     guard.add_one('0');
                 }
+                drop(guard); // change to parallel waiting
                 thread::sleep(Duration::from_secs(1));
             });
         }
