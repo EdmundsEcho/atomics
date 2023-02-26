@@ -12,53 +12,39 @@ use std::{
         *,
     },
     thread::{self, Thread},
+    time::Duration,
 };
 
 fn main() {
     //
-    // Mutex
+    // Mutex & thread parking
     //
-    // Here we let 10 threads mutate a value.  Each one gets to augment the value by 100.
-    // The total edits add up to 1000.
+    // Producer adds a new item every second.
+    // Consumer consumes items, but waits (parked) when the Vec is empty
     //
-    #[derive(Debug, PartialEq, Eq)]
-    struct Acc {
-        count: i32,
-        log: String,
-    }
-    impl Acc {
-        fn new() -> Self {
-            Acc {
-                count: 0,
-                log: "".into(),
-            }
-        }
-        fn add_one(&mut self, entry: char) {
-            self.count += 1;
-            self.log.push(entry);
-        }
-    }
-    let n = Mutex::new(Acc::new());
-    // creating a separate, single parent scope allows us to use "scoped" threads
-    // where the child threads can each share a value.
-    use std::time::Duration;
+
+    let queue = Mutex::new(VecDeque::new());
+
+    // This means that in our example above it’s important that we only park the thread if we’ve
+    // seen the queue is empty, rather than park it after every processed item.
+
     thread::scope(|s| {
-        for _ in 0..10 {
-            s.spawn(|| {
-                let mut guard = n.lock().unwrap();
-                for _ in 0..100 {
-                    guard.add_one('0');
-                }
-                drop(guard); // change to parallel waiting
-                             // 🔑 Don't hold on to the lock for long... as we do here by sleeping for a second
-                             // without first dropping the guard so that other threads can get a move on.
-                thread::sleep(Duration::from_secs(1));
-            });
+        // Consuming thread
+        let t = s.spawn(|| loop {
+            let item = queue.lock().unwrap().pop_front();
+            if let Some(item) = item {
+                dbg!(item);
+            } else {
+                thread::park(); // critical that only happens when empty
+            }
+        });
+        // Producing thread
+        for i in 0.. {
+            queue.lock().unwrap().push_back(i);
+            t.thread().unpark();
+            thread::sleep(Duration::from_secs(1));
         }
     });
 
-    println!("Hello from main thread");
-
-    dbg!(&n);
-    assert_eq!(n.into_inner().unwrap().count, 1000);
+    println!("Hello from main thread - use Condvar instead");
 }
