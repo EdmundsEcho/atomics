@@ -18,21 +18,44 @@ fn main() {
     //
     // Mutex
     //
-    let n = Mutex::new(0);
+    // Here we let 10 threads mutate a value.  Each one gets to augment the value by 100.
+    // The total edits add up to 1000.
+    //
+    #[derive(Debug, PartialEq, Eq)]
+    struct Acc {
+        count: i32,
+        log: String,
+    }
+    impl Acc {
+        fn new() -> Self {
+            Acc {
+                count: 0,
+                log: "".into(),
+            }
+        }
+        fn add_one(&mut self, entry: char) {
+            self.count += 1;
+            self.log.push(entry);
+        }
+    }
+    let n = Mutex::new(Acc::new());
     // creating a separate, single parent scope allows us to use "scoped" threads
     // where the child threads can each share a value.
+    use std::time::Duration;
     thread::scope(|s| {
         for _ in 0..10 {
             s.spawn(|| {
                 let mut guard = n.lock().unwrap();
                 for _ in 0..100 {
-                    *guard += 1;
+                    guard.add_one('0');
                 }
+                thread::sleep(Duration::from_secs(1));
             });
         }
     });
 
     println!("Hello from main thread");
 
-    assert_eq!(n.into_inner().unwrap(), 1000);
+    dbg!(&n);
+    assert_eq!(n.into_inner().unwrap().count, 1000);
 }
