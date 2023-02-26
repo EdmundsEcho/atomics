@@ -50,6 +50,8 @@ fn main() {
                     guard.add_one('0');
                 }
                 drop(guard); // change to parallel waiting
+                             // 🔑 Don't hold on to the lock for long... as we do here by sleeping for a second
+                             // without first dropping the guard so that other threads can get a move on.
                 thread::sleep(Duration::from_secs(1));
             });
         }
